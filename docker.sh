@@ -1,6 +1,7 @@
 DEFAULT_DOCKER_HOST=docker1
 DEFAULT_VNC_PORT=5899
 
+unalias docker &>/dev/null
 
 function display_center ()
 {
@@ -11,35 +12,35 @@ function display_center ()
 
 
 function __dockervnc {
-	if [ -z "$1" ]; then
-		docker ps;
-	else
-		VNCPORT=${2:-$DEFAULT_VNC_PORT}
-		PORT=$(docker port $1 | grep $VNCPORT | awk '{print $3}' | cut -d":" -f 2)
-		VNCPASSWD=$(docker inspect $1 | grep ASCI_ROOT_VNC_PASSWD | cut -d"\"" -f2 | cut -d"=" -f2)
-		HOST=$(echo $DOCKER_HOST | cut -d":" -f1)
-		#echo "Opening $HOST:$PORT with $VNCPASSWD on $VNCPORT"
-		open vnc://:$VNCPASSWD@$HOST:$PORT
-	fi
+  if [ -z "$1" ]; then
+    docker ps;
+  else
+    VNCPORT=${2:-$DEFAULT_VNC_PORT}
+    PORT=$(docker port $1 | grep $VNCPORT | awk '{print $3}' | cut -d":" -f 2)
+    VNCPASSWD=$(docker inspect $1 | grep ASCI_ROOT_VNC_PASSWD | cut -d"\"" -f2 | cut -d"=" -f2)
+    HOST=$(echo ${DOCKER_HOST:-127.0.0.1} | cut -d":" -f1)
+    #echo "Opening $HOST:$PORT with $VNCPASSWD on $VNCPORT"
+    open vnc://:$VNCPASSWD@$HOST:$PORT
+  fi
 }
 
 function __dockerexec {
-	if [ -z "$1" ]; then
-		docker ps;
-	else
-		if docker exec -it $1 bash; then
-			return
-		else
-			#echo "BASH not detected, trying with SH ..."
-			docker exec -it $1 sh
-		fi
-	fi
+  if [ -z "$1" ]; then
+    docker ps;
+  else
+    if docker exec -it $1 bash; then
+      return
+    else
+      #echo "BASH not detected, trying with SH ..."
+      docker exec -it $1 sh
+    fi
+  fi
 }
 
 function __dockerconnect {
   if [ -r ~/.docker/connect/$2 -a -n "$2" ]; then
     source ~/.docker/connect/$2
-	  export DOCKER_NAME="$(docker info 2>&1| grep Name | grep -v Pool | awk '{print $2}' | cut -d'.' -f1)"
+    export DOCKER_NAME="$(docker info 2>&1| grep Name | grep -v Pool | awk '{print $2}' | cut -d'.' -f1)"
 
     DOCKER_SWARM=$(docker info 2>&1 | grep "Swarm: " | cut -d' ' -f 2)
     if [ $DOCKER_SWARM = "active" ]; then
@@ -51,29 +52,29 @@ function __dockerconnect {
 }
 
 function __dockerwrapper {
-	if [ "$1" = "connect" ]; then
+  if [ "$1" = "connect" ]; then
       __dockerconnect $*
-	else
-		docker $*;
-	fi
+  else
+    docker $*;
+  fi
 }
 
 function __da {
-	tput setaf 3;
-	display_center Services;
-	docker service ls;#| grep -v "REPLICAS";
+  tput setaf 3;
+  display_center Services;
+  docker service ls;#| grep -v "REPLICAS";
 
-	tput setaf 2;
-	display_center Containers;
-	docker ps ;#| grep -v "CONTAINER ID";
+  tput setaf 2;
+  display_center Containers;
+  docker ps ;#| grep -v "CONTAINER ID";
 
-	tput setaf 4;
-	display_center Images;
-	docker images | grep -v "none";
+  tput setaf 4;
+  display_center Images;
+  docker images | grep -v "none";
 
-	tput setaf 6;
-	display_center Volumes;
-	docker volume ls ;#| grep -v "VOLUME NAME";
+  tput setaf 6;
+  display_center Volumes;
+  docker volume ls ;#| grep -v "VOLUME NAME";
 }
 
 # Docker wrapper command to catch new sub-command
