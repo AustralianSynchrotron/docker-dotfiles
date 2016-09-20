@@ -1,1 +1,5 @@
-Hello
+Setup
+
+Add the docker.sh to your bashrc file or bash profile.
+
+Display the $DOCKER_NAME env variable in your PS1 command to display the Docker hostname
